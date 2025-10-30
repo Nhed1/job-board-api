@@ -4,7 +4,8 @@ import { Database } from '../types/database.types';
 import { FilterJobsDto } from './dto/filter-jobs.dto';
 
 type Job = Database['public']['Tables']['jobs']['Row'];
-type UserJobInteraction = Database['public']['Tables']['user_job_interactions']['Row'];
+type UserJobInteraction =
+  Database['public']['Tables']['user_job_interactions']['Row'];
 
 export interface PaginatedJobsResponse {
   data: Job[];

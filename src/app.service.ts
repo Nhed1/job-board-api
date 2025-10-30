@@ -9,7 +9,7 @@ export class AppService {
     return 'Hello World!';
   }
 
-  async getSupabaseData() {
+  getSupabaseData() {
     return { message: 'Supabase is connected and ready to use!' };
   }
 }

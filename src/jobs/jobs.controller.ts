@@ -36,12 +36,9 @@ export class JobsController {
     @Body() createInteractionDto: CreateInteractionDto,
   ) {
     try {
-      return await this.jobsService.saveJob(
-        jobId,
-        createInteractionDto.userId,
-      );
+      return await this.jobsService.saveJob(jobId, createInteractionDto.userId);
     } catch (error) {
-      if (error.message === 'Job already saved') {
+      if (error instanceof Error && error.message === 'Job already saved') {
         throw new ConflictException('Job already saved');
       }
       throw error;
@@ -59,7 +56,10 @@ export class JobsController {
         createInteractionDto.userId,
       );
     } catch (error) {
-      if (error.message === 'Already applied to this job') {
+      if (
+        error instanceof Error &&
+        error.message === 'Already applied to this job'
+      ) {
         throw new ConflictException('Already applied to this job');
       }
       throw error;
