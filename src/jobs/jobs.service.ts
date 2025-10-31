@@ -241,4 +241,35 @@ export class JobsService {
 
     return data;
   }
+
+  async removeInteraction(
+    jobId: string,
+    userId: string,
+    interactionType?: 'favorite' | 'applied',
+  ): Promise<{ success: boolean; message: string }> {
+    const supabase = this.supabaseService.getClient();
+
+    let query = supabase
+      .from('user_job_interactions')
+      .delete()
+      .eq('job_id', jobId)
+      .eq('user_id', userId);
+
+    if (interactionType) {
+      query = query.eq('interaction_type', interactionType);
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      throw new Error(`Failed to remove interaction: ${error.message}`);
+    }
+
+    return {
+      success: true,
+      message: interactionType
+        ? `${interactionType} interaction removed successfully`
+        : 'All interactions removed successfully',
+    };
+  }
 }

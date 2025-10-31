@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Param,
   Query,
   Body,
@@ -64,5 +65,17 @@ export class JobsController {
       }
       throw error;
     }
+  }
+
+  @Delete(':id/interactions')
+  async removeInteraction(
+    @Param('id') jobId: string,
+    @Query('userId') userId: string,
+    @Query('type') type?: 'favorite' | 'applied',
+  ) {
+    if (!userId) {
+      throw new NotFoundException('userId is required');
+    }
+    return await this.jobsService.removeInteraction(jobId, userId, type);
   }
 }
