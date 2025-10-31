@@ -22,8 +22,8 @@ export class JobsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const job = await this.jobsService.findOne(id);
+  async findOne(@Param('id') id: string, @Query('userId') userId?: string) {
+    const job = await this.jobsService.findOne(id, userId);
     if (!job) {
       throw new NotFoundException(`Job with ID ${id} not found`);
     }

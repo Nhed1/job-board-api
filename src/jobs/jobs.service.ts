@@ -7,8 +7,15 @@ type Job = Database['public']['Tables']['jobs']['Row'];
 type UserJobInteraction =
   Database['public']['Tables']['user_job_interactions']['Row'];
 
+export interface JobWithInteraction extends Job {
+  userInteraction?: {
+    hasApplied: boolean;
+    hasSaved: boolean;
+  };
+}
+
 export interface PaginatedJobsResponse {
-  data: Job[];
+  data: JobWithInteraction[];
   meta: {
     page: number;
     limit: number;
@@ -73,8 +80,54 @@ export class JobsService {
     const total = count || 0;
     const totalPages = Math.ceil(total / limit);
 
+    let jobsWithInteraction: JobWithInteraction[] = data || [];
+
+    if (filters.userId && data && data.length > 0) {
+      const jobIds = data.map((job) => job.id);
+
+      const { data: interactions, error: interactionsError } = await supabase
+        .from('user_job_interactions')
+        .select('job_id, interaction_type')
+        .eq('user_id', filters.userId)
+        .in('job_id', jobIds);
+
+      if (interactionsError) {
+        throw new Error(
+          `Failed to fetch user interactions: ${interactionsError.message}`,
+        );
+      }
+
+      const interactionMap = new Map<
+        string,
+        { hasApplied: boolean; hasSaved: boolean }
+      >();
+
+      interactions?.forEach((interaction) => {
+        if (!interactionMap.has(interaction.job_id)) {
+          interactionMap.set(interaction.job_id, {
+            hasApplied: false,
+            hasSaved: false,
+          });
+        }
+        const current = interactionMap.get(interaction.job_id)!;
+        if (interaction.interaction_type === 'applied') {
+          current.hasApplied = true;
+        } else if (interaction.interaction_type === 'favorite') {
+          current.hasSaved = true;
+        }
+      });
+
+      jobsWithInteraction = data.map((job) => ({
+        ...job,
+        userInteraction: interactionMap.get(job.id) || {
+          hasApplied: false,
+          hasSaved: false,
+        },
+      }));
+    }
+
     return {
-      data: data || [],
+      data: jobsWithInteraction,
       meta: {
         page,
         limit,
@@ -84,7 +137,10 @@ export class JobsService {
     };
   }
 
-  async findOne(id: string): Promise<Job | null> {
+  async findOne(
+    id: string,
+    userId?: string,
+  ): Promise<JobWithInteraction | null> {
     const supabase = this.supabaseService.getClient();
 
     const { data, error } = await supabase
@@ -101,7 +157,41 @@ export class JobsService {
       throw new Error(`Failed to fetch job: ${error.message}`);
     }
 
-    return data;
+    let jobWithInteraction: JobWithInteraction = data;
+
+    if (userId && data) {
+      const { data: interactions, error: interactionsError } = await supabase
+        .from('user_job_interactions')
+        .select('interaction_type')
+        .eq('user_id', userId)
+        .eq('job_id', id);
+
+      if (interactionsError) {
+        throw new Error(
+          `Failed to fetch user interactions: ${interactionsError.message}`,
+        );
+      }
+
+      const userInteraction = {
+        hasApplied: false,
+        hasSaved: false,
+      };
+
+      interactions?.forEach((interaction) => {
+        if (interaction.interaction_type === 'applied') {
+          userInteraction.hasApplied = true;
+        } else if (interaction.interaction_type === 'favorite') {
+          userInteraction.hasSaved = true;
+        }
+      });
+
+      jobWithInteraction = {
+        ...data,
+        userInteraction,
+      };
+    }
+
+    return jobWithInteraction;
   }
 
   async saveJob(jobId: string, userId: string): Promise<UserJobInteraction> {
