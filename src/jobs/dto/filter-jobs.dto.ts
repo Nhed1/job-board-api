@@ -1,6 +1,13 @@
-import { IsOptional, IsString, IsEnum, IsBoolean, IsNumber, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsIn,
+  IsBoolean,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { Database } from '../../types/database.types';
+import { Database } from '../../../database.types';
 
 export class FilterJobsDto {
   @IsOptional()
@@ -8,11 +15,11 @@ export class FilterJobsDto {
   search?: string;
 
   @IsOptional()
-  @IsEnum(['full_time', 'part_time', 'contract', 'freelance', 'internship'])
+  @IsIn(['full-time', 'part-time', 'contract', 'internship'])
   jobType?: Database['public']['Enums']['job_type_enum'];
 
   @IsOptional()
-  @IsEnum(['entry', 'junior', 'mid', 'senior', 'lead', 'principal'])
+  @IsIn(['entry', 'mid', 'senior', 'lead'])
   experienceLevel?: Database['public']['Enums']['experience_level_enum'];
 
   @IsOptional()

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
-import { Database } from '../types/database.types';
+import { Database } from '../../database.types';
 import { FilterJobsDto } from './dto/filter-jobs.dto';
 
 type Job = Database['public']['Tables']['jobs']['Row'];
@@ -112,7 +112,7 @@ export class JobsService {
       .insert({
         user_id: userId,
         job_id: jobId,
-        interaction_type: 'save',
+        interaction_type: 'favorite',
       })
       .select()
       .single();
@@ -136,7 +136,7 @@ export class JobsService {
       .insert({
         user_id: userId,
         job_id: jobId,
-        interaction_type: 'apply',
+        interaction_type: 'applied',
       })
       .select()
       .single();
